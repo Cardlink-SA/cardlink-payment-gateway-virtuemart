@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension version="2.5" type="plugin" group="system" method="upgrade">
+	<name>Cardlink Payment Gateway Helper</name>
+	<version>1.0</version>
+	<modified>21-11-2022</modified>
+	<creationDate>20 Nov 2022</creationDate>
+	<author>CARDLINK</author>
+	<authorEmail>info@cardlink.gr</authorEmail>
+	<authorUrl>http://www.cardlink.gr/</authorUrl>
+	<copyright>(C) 2022 Cardlink</copyright>
+	<license>GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html</license>
+	<description>Cardlink Payment Gateway Installer</description>
+	<scriptfile>script.cardlinkhelper.php</scriptfile>
+	<files>
+		<filename plugin="cardlinkhelper">cardlinkhelper.php</filename>
+		<filename>index.html</filename>
+	</files>
+	<config>
+		<fields name="params">
+			<fieldset name="Basic">
+				<field default="0" type="radio" name="router" label="Router Fix" description="Router values by-pass">
+					<option value="0">JNO</option>
+					<option value="1">JYES</option>
+				</field>
+				<field default="0" type="radio" name="disablesef" label="Disable Sef on Redirect" description="Disable Sef on Return to thank you page">
+					<option value="0">JNO</option>
+					<option value="1">JYES</option>
+				</field>
+				<field default="0" type="radio" name="debug" label="Debug" description="Only for testing">
+					<option value="0">JNO</option>
+					<option value="1">JYES</option>
+				</field>
+			</fieldset>
+		</fields>
+	</config>
+	<plugins>
+		<!-- Virtuemart -->
+		<plugin plugin="eurobank" group="vmpayment" />
+		<plugin plugin="cardlink" group="vmpayment" />
+		<plugin plugin="vivapayments" group="vmpayment" />
+		<plugin plugin="winbank" group="vmpayment" />
+	</plugins>
+</extension>
