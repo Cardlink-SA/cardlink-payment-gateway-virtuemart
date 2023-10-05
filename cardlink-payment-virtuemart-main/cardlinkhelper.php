@@ -1,6 +1,6 @@
 <?php
 /**
- * @package     GR Bank Payment Helper
+ * @package     Cardlink Payment Helper
  * @version     4.2
  * @company   	Cardlink
  * @developer   Cardlink
