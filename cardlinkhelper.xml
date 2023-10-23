@@ -35,9 +35,7 @@
 	</config>
 	<plugins>
 		<!-- Virtuemart -->
-		<plugin plugin="eurobank" group="vmpayment" />
 		<plugin plugin="cardlink" group="vmpayment" />
-		<plugin plugin="vivapayments" group="vmpayment" />
-		<plugin plugin="winbank" group="vmpayment" />
+		<plugin plugin="cardlinkiris" group="vmpayment" />
 	</plugins>
 </extension>

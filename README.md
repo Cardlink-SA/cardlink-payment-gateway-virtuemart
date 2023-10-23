@@ -1,1 +1,0 @@
-# virtuemart-cardlink-payment-gateway
