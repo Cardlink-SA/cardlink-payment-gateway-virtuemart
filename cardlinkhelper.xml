@@ -36,6 +36,5 @@
 	<plugins>
 		<!-- Virtuemart -->
 		<plugin plugin="cardlink" group="vmpayment" />
-		<plugin plugin="cardlinkiris" group="vmpayment" />
 	</plugins>
 </extension>
