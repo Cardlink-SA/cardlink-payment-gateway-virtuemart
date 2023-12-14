@@ -180,7 +180,7 @@ class plgVmPaymentCardlink extends PaymentCardlinkHelper
 		if(method_exists('VmConfig','loadJLang')) VmConfig::loadJLang('com_virtuemart_orders',TRUE);
 		$lang = explode('-',JFactory::getLanguage()->getTag());
 		$billCountry=ShopFunctions::getCountryByID($order['details']['BT']->virtuemart_country_id, 'country_2_code');
-		$shipCountry=ShopFunctions::getCountryByID($address->virtuemart_country_id, 'country_2_code');
+		$shipCountry=ShopFunctions::getCountryByID($order['details']['ST']->virtuemart_country_id, 'country_2_code');
 		$post=array(
 			'version'=>2,
 			'mid'=>JString::trim($this->_currentMethod->mid),
@@ -190,16 +190,25 @@ class plgVmPaymentCardlink extends PaymentCardlinkHelper
 			'orderAmount'=> number_format($this->totalOrder,2,".",""),
 			'currency'=> ShopFunctions::getCurrencyByID($this->_currentMethod->payment_currency,'currency_code_3'),
 			'payerEmail'=> $order['details']['BT']->email,
+			'payerPhone'=> $order['details']['BT']->phone_1,
 			'billCountry'=> $billCountry,
 			'billState'=> isset($order['details']['BT']->virtuemart_state_id) ? ShopFunctions::getStateByID($order['details']['BT']->virtuemart_state_id, 'state_name') : '',
 			'billZip'=>str_replace(' ','',$order['details']['BT']->zip),
 			'billCity'=>JString::trim($order['details']['BT']->city),
 			'billAddress'=>!empty($order['details']['BT']->address_1)?JString::trim($order['details']['BT']->address_1):JString::trim($order['details']['BT']->address_2),
+			'shipCountry'=> $shipCountry,
+			//'shipState'=> isset($order['details']['BT']->virtuemart_state_id) ? ShopFunctions::getStateByID($order['details']['BT']->virtuemart_state_id, 'state_name') : '',
+			'shipZip'=>str_replace(' ','',$order['details']['ST']->zip),
+			'shipCity'=>JString::trim($order['details']['ST']->city),
+			'shipAddress'=>!empty($order['details']['ST']->address_1)?JString::trim($order['details']['ST']->address_1):JString::trim($order['details']['ST']->address_2),
 			'trType'=>(int)$this->_currentMethod->paytype,
 		);
 
 		
-		if($billCountry=='GR' || empty($post['billState'])) unset($post['billState']);
+		if($billCountry=='GR' || empty($post['billState'])){
+			unset($post['billState']);
+			//unset($post['shipState']);
+		}
 		
 		if($installments>0)
 		{
