@@ -1,0 +1,31 @@
+.payment-cards,
+.payment-installments {
+    margin-left: 20px;
+    margin-top: 8px;
+}
+
+.payment-cards {
+    margin-bottom: 10px;
+}
+
+.payment-cards__field img {
+    max-height: 24px;
+}
+
+#payment_iframe {
+    width: 100%;
+    min-height: 700px;
+    height: 100%;
+    max-height: 100vh;
+    display: block;
+}
+
+@media print {
+    .no-print {
+        display: none;
+    }
+}
+
+span.vmpayment.cardlinkcard span.vmCartPaymentLogo img {
+    max-height: 32px;
+}

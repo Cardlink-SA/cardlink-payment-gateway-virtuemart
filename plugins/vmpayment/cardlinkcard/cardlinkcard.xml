@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<extension version="2.5" type="plugin" group="vmpayment" method="upgrade">
+	<name>Cardlink Payment Gateway for Cards</name>
+	<creationDate>22/01/2024</creationDate>
+	<author>Cardlink</author>
+	<authorUrl>http://www.cardlink.gr</authorUrl>
+	<copyright>Copyright (C) 2024 Cardlink. All rights reserved.</copyright>
+	<license>http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL</license>
+	<version>1.0.0</version>
+	<description>Cardlink Payment Gateway allows you to accept payment through various schemes such as Visa, Mastercard, Maestro, American Express, Diners, Discover cards on your website.</description>
+	<scriptfile>script.cardlinkcard.php</scriptfile>
+
+	<files>
+		<filename plugin="cardlinkcard">cardlinkcard.php</filename>
+		<filename>index.html</filename>
+		<folder>assets</folder>
+		<folder>language</folder>
+		<folder>tmpl</folder>
+	</files>
+
+	<languages>
+		<language tag="en-GB">language/en-GB/en-GB.plg_vmpayment_cardlinkcard.ini</language>
+		<language tag="el-GR">language/el-GR/el-GR.plg_vmpayment_cardlinkcard.ini</language>
+	</languages>
+
+	<vmconfig>
+		<fields name="params">
+			<fieldset name="order_related" label="VMPAYMENT_CARDLINKCARD_ORDER_STATUS_SECTION" description="VMPAYMENT_CARDLINKCARD_ORDER_STATUS_SECTION_DESC">
+				<field name="status_pending" type="vmorderstate" scope="com_virtuemart" default="C" label="VMPAYMENT_CARDLINKCARD_STATUS_PENDING" description="VMPAYMENT_CARDLINKCARD_STATUS_PENDING_DESC" />
+				<field name="status_authorisation" type="vmorderstate" scope="com_virtuemart" default="U" label="VMPAYMENT_CARDLINKCARD_STATUS_AUTHORISATION" description="VMPAYMENT_CARDLINKCARD_STATUS_AUTHORISATION_DESC" />
+				<field name="status_success" type="vmorderstate" scope="com_virtuemart" default="C" label="VMPAYMENT_CARDLINKCARD_STATUS_SUCCESS" description="VMPAYMENT_CARDLINKCARD_STATUS_SUCCESS_DESC" />
+				<field name="status_canceled" type="vmorderstate" scope="com_virtuemart" default="X" label="VMPAYMENT_CARDLINKCARD_STATUS_CANCEL" description="VMPAYMENT_CARDLINKCARD_STATUS_CANCEL_DESC" />
+			</fieldset>
+
+			<fieldset name="restrictions" label="VMPAYMENT_CARDLINKCARD_RESTRICTIONS_SECTION">
+				<field name="payment_currency" type="vmacceptedcurrency" default="" label="VMPAYMENT_CARDLINKCARD_CURRENCY" description="VMPAYMENT_CARDLINKCARD_CURRENCY_DESC"/>
+				<field name="countries" type="vmcountries" scope="com_virtuemart" default="" label="VMPAYMENT_CARDLINKCARD_COUNTRIES" description="VMPAYMENT_CARDLINKCARD_COUNTRIES_DESC"/>
+				<field name="min_amount" type="text" label="VMPAYMENT_CARDLINKCARD_MIN_AMOUNT" description="VMPAYMENT_CARDLINKCARD_MIN_AMOUNT_DESC"/>
+				<field name="max_amount" type="text" label="VMPAYMENT_CARDLINKCARD_MAX_AMOUNT" description="VMPAYMENT_CARDLINKCARD_MAX_AMOUNT_DESC"/>
+			</fieldset>
+
+			<fieldset name="fees" label="VMPAYMENT_CARDLINKCARD_FEES_SECTION">
+				<field name="cost_per_transaction" type="text" label="VMPAYMENT_CARDLINKCARD_COST_PER_TRANSACTION" description="VMPAYMENT_CARDLINKCARD_COST_PER_TRANSACTION_DESC"/>
+				<field name="cost_percent_total" type="text" label="VMPAYMENT_CARDLINKCARD_COST_PERCENT_TOTAL" description="VMPAYMENT_CARDLINKCARD_COST_PERCENT_TOTAL_DESC"/>
+				<field name="tax_id" type="vmtaxes" scope="com_virtuemart" label="VMPAYMENT_CARDLINKCARD_TAX" description="VMPAYMENT_CARDLINKCARD_TAX_DESC"/>
+			</fieldset>
+
+			<fieldset name="payment" label="VMPAYMENT_CARDLINKCARD_SETTINGS">
+				<field name="demoaccount" type="list" default="0" label="VMPAYMENT_CARDLINKCARD_DEMO_ACCOUNT" description="VMPAYMENT_CARDLINKCARD_DEMO_ACCOUNT_DESC">
+					<option value="0">COM_VIRTUEMART_NO</option>
+					<option value="1">COM_VIRTUEMART_YES</option>
+				</field>
+				<field name="mid" type="text" size="30" default="" label="VMPAYMENT_CARDLINKCARD_MERCHANTID"/>
+				<field name="secretkey" type="text" size="30" default="" label="VMPAYMENT_CARDLINKCARD_SECRETKEY"/>
+				<field name="acquirer" type="list" default="0" label="VMPAYMENT_CARDLINKCARD_ACQUIRER" description="VMPAYMENT_CARDLINKCARD_ACQUIRER_DESC">
+					<option value="0">Cardlink Checkout</option>
+					<option value="1">Nexi Checkout</option>
+					<option value="2">Worldline Greece Checkout</option>
+				</field>
+				<field name="paytype" type="list" default="1" label="VMPAYMENT_CARDLINKCARD_TYPE" description="VMPAYMENT_CARDLINKCARD_TYPE_DESC">
+					<option value="1">VMPAYMENT_CARDLINKCARD_TYPE_SALE</option>
+					<option value="2">VMPAYMENT_CARDLINKCARD_TYPE_AUTHORIZATION</option>
+				</field>
+			</fieldset>
+
+			<fieldset name="card_tokenization_settings" label="VMPAYMENT_CARDLINKCARD_TOKENIZATION_SETTINGS">
+				<field name="tokenization" type="list" default="0" label="VMPAYMENT_CARDLINKCARD_TOKENIZATION" description="VMPAYMENT_CARDLINKCARD_TOKENIZATION_DESC">
+					<option value="0">COM_VIRTUEMART_NO</option>
+					<option value="1">COM_VIRTUEMART_YES</option>
+				</field>
+			</fieldset>
+
+			<fieldset name="installments_section" label="VMPAYMENT_CARDLINKCARD_INSTALLMENTS_SETTINGS">
+				<field name="allow_installments" type="list" default="0" label="VMPAYMENT_CARDLINKCARD_ALLOW_INSTALLMENTS" description="VMPAYMENT_CARDLINKCARD_ALLOW_INSTALLMENTS_DESC">
+					<option value="0">COM_VIRTUEMART_NO</option>
+					<option value="1">COM_VIRTUEMART_YES</option>
+				</field>
+				<field name="max_installments" type="list" default="1" label="VMPAYMENT_CARDLINKCARD_MAXINSTALMENTS" description="VMPAYMENT_CARDLINKCARD_MAXINSTALMENTS_DESC">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					<option value="6">6</option>
+					<option value="7">7</option>
+					<option value="8">8</option>
+					<option value="9">9</option>
+					<option value="10">10</option>
+					<option value="11">11</option>
+					<option value="12">12</option>
+					<option value="13">13</option>
+					<option value="14">14</option>
+					<option value="15">15</option>
+					<option value="16">16</option>
+					<option value="17">17</option>
+					<option value="18">18</option>
+					<option value="19">19</option>
+					<option value="20">20</option>
+					<option value="21">21</option>
+					<option value="22">22</option>
+					<option value="23">23</option>
+					<option value="24">24</option>
+					<option value="25">25</option>
+					<option value="26">26</option>
+					<option value="27">27</option>
+					<option value="28">28</option>
+					<option value="29">29</option>
+					<option value="30">30</option>
+					<option value="31">31</option>
+					<option value="32">32</option>
+					<option value="33">33</option>
+					<option value="34">34</option>
+					<option value="35">35</option>
+					<option value="36">36</option>
+					<option value="37">37</option>
+					<option value="38">38</option>
+					<option value="39">39</option>
+					<option value="40">40</option>
+					<option value="41">41</option>
+					<option value="42">42</option>
+					<option value="43">43</option>
+					<option value="44">44</option>
+					<option value="45">45</option>
+					<option value="46">46</option>
+					<option value="47">47</option>
+					<option value="48">48</option>
+					<option value="49">49</option>
+					<option value="50">50</option>
+					<option value="51">51</option>
+					<option value="52">52</option>
+					<option value="53">53</option>
+					<option value="54">54</option>
+					<option value="55">55</option>
+					<option value="56">56</option>
+					<option value="57">57</option>
+					<option value="58">58</option>
+					<option value="59">59</option>
+					<option value="60">60</option>
+				</field>
+				<field type="text" name="installments_variations" size="50" label="VMPAYMENT_CARDLINKCARD_INSTALLMENTS_VARIATIONS" description="VMPAYMENT_CARDLINKCARD_INSTALLMENTS_VARIATIONS_DESC" />
+			</fieldset>
+
+			<fieldset name="display_settings_section" label="VMPAYMENT_CARDLINKCARD_DISPLAY_SETTINGS">
+				<field name="payment_logos" type="vmfiles" label="VMPAYMENT_CARDLINKCARD_LOGOS" description="VMPAYMENT_CARDLINKCARD_LOGOS_DESC" directory="/images/virtuemart/payment" hide_default="1" hide_none="0" stripext="0" exclude="^_" />
+				<field name="iframe" type="list" default="0" label="VMPAYMENT_CARDLINKCARD_IFRAME" description="VMPAYMENT_CARDLINKCARD_IFRAME_DESC">
+					<option value="0">COM_VIRTUEMART_NO</option>
+					<option value="1">COM_VIRTUEMART_YES</option>
+				</field>
+				<field type="url" name="css_url" size="50" maxlength="200" label="VMPAYMENT_CARDLINKCARD_CSS_URL" validate="true" default="" hint="VMPAYMENT_CARDLINKCARD_CSS_URL_DESC" />
+			</fieldset>
+
+			<fieldset name="debug_settings_section" label="VMPAYMENT_CARDLINKCARD_DEBUG_SECTION" description="VMPAYMENT_CARDLINKCARD_DEBUG_SECTION_DESC">
+				<field name="debug" type="radio" default="0" label="VMPAYMENT_CARDLINKCARD_DEBUG_SECTION">
+					<option value="0">COM_VIRTUEMART_NO</option>
+					<option value="1">COM_VIRTUEMART_YES</option>
+				</field>
+
+				<field name="log" type="radio" default="0" label="VMPAYMENT_CARDLINKCARD_LOG" description="VMPAYMENT_CARDLINKCARD_LOG_DESC">
+					<option value="0">COM_VIRTUEMART_NO</option>
+					<option value="1">COM_VIRTUEMART_YES</option>
+				</field>
+			</fieldset>
+		</fields>
+	</vmconfig>
+
+	<!-- <updateservers>
+	<!- - Note: No spaces or linebreaks allowed between the server tags - ->
+	<server type="extension" name="VirtueMart plg_vmpayment_standard Update Site"><![CDATA[http://virtuemart.net/releases/vm3/plg_vmpayment_standard_update.xml]]></server>
+</updateservers> -->
+
+</extension>

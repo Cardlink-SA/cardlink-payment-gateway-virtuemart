@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form>
+    <fields name="params">
+        <fieldset name="task_params">
+            <field name="cancel_time" type="number" default="30" label="PLG_TASK_CARDLINK_CANCEL_UNPAID_ORDERS_CANCEL_TIME_LABEL" description="PLG_TASK_CARDLINK_CANCEL_UNPAID_ORDERS_CANCEL_TIME_DESC" min="5" max="60">
+            </field>
+        </fieldset>
+    </fields>
+</form>

@@ -1,0 +1,29 @@
+<!-- plugins/task/cardlink_cancel_unpaid_orders/cardlink_cancel_unpaid_orders.xml -->
+<extension type="plugin" group="task" method="upgrade">
+    <name>Cardlink Cancel Unpaid Orders</name>
+    <author>Cardlink</author>
+    <creationDate>2024-06-03</creationDate>
+    <copyright>Copyright (C) 2024 Cardlink</copyright>
+    <license>GNU General Public License</license>
+    <version>1.0.0</version>
+    <description>Plugin to cancel unpaid orders older than a configurable number of minutes in VirtueMart.</description>
+    <namespace path="src">Joomla\Plugin\Task\CardlinkCancelUnpaidOrders</namespace>
+    <files>
+        <folder plugin="cardlink_cancel_unpaid_orders">services</folder>
+        <folder>src</folder>
+        <folder>forms</folder>
+        <folder>language</folder>
+        <filename>index.html</filename>
+    </files>
+    <languages>
+        <language tag="el-GR">language/el-GR/plg_task_cardlink_cancel_unpaid_orders.ini</language>
+        <language tag="en-GB">language/en-GB/plg_task_cardlink_cancel_unpaid_orders.ini</language>
+    </languages>
+    <config>
+        <fields name="params">
+            <fieldset name="basic">
+                <field name="cancel_time" type="number" label="PLG_TASK_CARDLINK_CANCEL_UNPAID_ORDERS_CANCEL_TIME_LABEL" description="PLG_TASK_CARDLINK_CANCEL_UNPAID_ORDERS_CANCEL_TIME_DESC" default="60" min="5" max="60" />
+            </fieldset>
+        </fields>
+    </config>
+</extension>
