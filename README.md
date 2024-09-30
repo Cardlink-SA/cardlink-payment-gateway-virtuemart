@@ -11,7 +11,11 @@
 ## Changelog
 
 - **1.0.0**
-  - Initial release
+  - Initial release.
+- **1.0.1**
+  - Optimized digest validation process.
+- **1.1.0**
+  - Added support for IRIS payments.
 
 ## Description
 
@@ -33,7 +37,7 @@ Once you have completed the requested tests and any changes to your website, you
 8. A text field for providing the absolute or relative (to Cardlink Payment Gateway location on server) URL of custom CSS stylesheet, to apply custom CSS styles in the payment page.
 9. Translation ready for Greek & English languages.
 10. Automatically cancel pending payment orders after a configurable number of minutes using Joomla Scheduled Tasks.
-<!-->11. IRIS payment method support.-->
+11. Support for IRIS payments.
 
 ## Installation and Configuration
 
@@ -43,6 +47,8 @@ Normally, if an order is abandoned (not paid), the order status will remain at P
 
 ## Required Hosting Configuration Step
 
+#### Apache Web Server
+
 For hosting solutions running the Apache web server software, you will need to add the following lines to your web site’s root ``.htaccess`` file. These will manipulate all cookies set by your VirtueMart store to allow customer sessions to persist after returning from the payment gateway. If you fail to properly set these, customers returning from the payment gateway will be automatically logged out from their accounts.
 
 ```
@@ -50,6 +56,8 @@ For hosting solutions running the Apache web server software, you will need to a
 Header always edit Set-Cookie ^(.*)$ $1;SameSite=None;Secure
 </IfModule>
 ```
+
+#### Nginx Web Server
 
 If your hosting provider uses the Nginx web server instead, you will need to add/edit the following lines of code to your virtual host’s configuration file.
 
@@ -59,6 +67,25 @@ location / {
     …
 }
 ```
+
+### Plesk Hosting Control Panel
+
+If you are using Plesk and nginx in proxy mode, under ``Apache & nginx Setting for ... > Additional nginx directives`` add only the following line:
+
+```
+proxy_cookie_path / "/; SameSite=None; Secure";
+```
+
+If you are only using Apache, add the following configuration lines in the ``Additional Apache directives`` section on the same page. By default, Plesk has the Apache ``mod_headers`` module installed and active however, verify that this is the case for your Plesk installation.
+
+```
+<IfModule mod_headers.c>
+Header always edit Set-Cookie ^(.*)$ $1;SameSite=None;Secure
+</IfModule>
+```
+
+If you are unsure or unfamiliar with the actions described above, please ask a trained IT person or contact your hosting provider to do them for you.
+
 
 If you are unsure or unfamiliar with the actions described above, please ask a trained IT person or contact your hosting provider to do them for you.
 

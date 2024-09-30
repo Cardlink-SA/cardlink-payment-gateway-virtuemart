@@ -8,17 +8,17 @@
 defined('_JEXEC') or die('Restricted access');
 
 if (!class_exists('vmDefines')) {
-	require (JPATH_ADMINISTRATOR . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'com_virtuemart' . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'vmdefines.php');
+	require(JPATH_ADMINISTRATOR . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'com_virtuemart' . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'vmdefines.php');
 	vmDefines::defines('site');
 }
 if (!class_exists('vmPlugin')) {
-	require (JPATH_ADMINISTRATOR . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'com_virtuemart' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'vmplugin.php');
+	require(JPATH_ADMINISTRATOR . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'com_virtuemart' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'vmplugin.php');
 }
 if (!class_exists('vmPSPlugin')) {
-	require (JPATH_ADMINISTRATOR . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'com_virtuemart' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'vmpsplugin.php');
+	require(JPATH_ADMINISTRATOR . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'com_virtuemart' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'vmpsplugin.php');
 }
 
-require_once ("apifields.php");
+require_once(dirname(__FILE__) . "/../cardlinkcard/apifields.php");
 
 use Joomla\Database\DatabaseInterface;
 use Joomla\Filesystem\Folder;
@@ -30,14 +30,12 @@ use Joomla\CMS\Router\Route;
 use Joomla\CMS\Response\JsonResponse;
 use Joomla\CMS\Session\Session;
 
-class plgVmPaymentCardlinkCard extends vmPSPlugin
+
+class plgVmPaymentCardlinkIris extends vmPSPlugin
 {
 	public const OrderId_SuffixLength = 5;
-	protected $installments = 0;
-	protected $installmentOptions = array();
-	protected $tokenizationOption = 0;
 	protected $totalOrder = 0;
-	protected $gatewayName = 'cardlinkcard';
+	protected $gatewayName = 'cardlinkiris';
 
 	function __construct(&$subject, $config)
 	{
@@ -50,19 +48,15 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		$this->_tablepkey = 'id'; //virtuemart_cardlink_id';
 		$this->_tableId = 'id'; //'virtuemart_cardlink_id';
 		$varsToPush = array(
-			'acquirer' => array(0, 'int'),
+			'acquirer' => array(1, 'int'),
 			'mid' => array('', 'char'),
 			'secretkey' => array('', 'char'),
+			'dias_customer_code' => array('', 'char'),
 			'demoaccount' => array(0, 'int'),
-			'allow_installments' => array(0, 'int'),
-			'max_installments' => array(0, 'int'),
-			'installments_variations' => array('', 'char'),
 			'payment_currency' => array('', 'int'),
 			'payment_logos' => array('', 'char'),
-			'paymeth' => array('auto', 'char'),
 			'referenceid' => array('order_number', 'char'),
 			'paytype' => array(1, 'int'),
-			'tokenization' => array(0, 'int'),
 			'iframe' => array(0, 'int'),
 			'css_url' => array('', 'char'),
 			'version' => array(1, 'int'),
@@ -97,7 +91,7 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 	{
 		// Load VirtueMart configuration
 		if (!class_exists('VmConfig')) {
-			require (JPATH_ADMINISTRATOR . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'com_virtuemart' . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'config.php');
+			require(JPATH_ADMINISTRATOR . DIRECTORY_SEPARATOR . 'components' . DIRECTORY_SEPARATOR . 'com_virtuemart' . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'config.php');
 		}
 		vmDefines::loadJoomlaCms();
 		VmConfig::loadConfig();
@@ -105,7 +99,7 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 
 	public function getVmPluginCreateTableSQL()
 	{
-		return $this->createTableSQL('Cardlink Card Payment Method Table');
+		return $this->createTableSQL('Cardlink IRIS Payment Method Table');
 	}
 
 	function getTableSQLFields()
@@ -121,9 +115,6 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 			'cost_per_transaction' => 'decimal(10,2)',
 			'cost_percent_total' => 'decimal(10,2)',
 			'tax_id' => 'smallint(1)',
-			'installments' => 'int(3) UNSIGNED',
-			'tokenize' => 'smallint(1)',
-			'token_id' => 'int(11)',
 			'cardlink_orderid' => 'varchar(50)',
 			'cardlink_paymenttotal' => 'decimal(10,2)',
 			'cardlink_message' => 'varchar(128)',
@@ -136,7 +127,6 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		);
 		return $SQLfields;
 	}
-
 	/**
 	 * This event is fired after the payment method has been selected.
 	 * It can be used to store additional payment info in the cart.
@@ -162,10 +152,6 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 	public function plgVmOnSelectedCalculatePricePayment(VirtueMartCart $cart, array &$cart_prices, &$cart_prices_name)
 	{
 		if ($this->OnSelectCheck($cart)) {
-			$payid = vRequest::getInt('virtuemart_paymentmethod_id', 0);
-			if ($payid > 0 && isset($_POST['installments'][$payid])) {
-				Factory::getApplication()->getSession()->set('vmpayinstallments' . $payid, (int) $_POST['installments'][$payid]);
-			}
 			return $this->onSelectedCalculatePrice($cart, $cart_prices, $cart_prices_name);
 		}
 		return NULL;
@@ -205,11 +191,6 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		// Add custom payment information to the order details view
 		$html = '<u>' . $paymentName . '</u><br />';
 		$html .= '<table class="small">';
-
-		if ($paymentTable->installments > 1) {
-			$html .= $this->getHtmlRowBE('CARDLINKCARD_INSTALLMENTS_TITLE', $paymentTable->installments);
-		}
-
 		$html .= $this->getHtmlRowBE('CARDLINKCARD_PAYMENT_METHOD', strtoupper($paymentTable->cardlink_paymethod));
 		$html .= $this->getHtmlRowBE('CARDLINKCARD_PAYMENT_STATUS', $paymentTable->cardlink_status);
 		$html .= $this->getHtmlRowBE('CARDLINKCARD_TRANSACTION_ID', $paymentTable->cardlink_txid);
@@ -258,19 +239,19 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		if (!($this->_currentMethod = $this->getVmPluginMethod($order['details']['BT']->virtuemart_paymentmethod_id))) {
 			return NULL; // Another method was selected, do nothing
 		}
+
 		if (!$this->selectedThisElement($this->_currentMethod->payment_element)) {
 			return FALSE;
 		}
 
 		if (!class_exists('VirtueMartModelOrders')) {
-			require (JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'orders.php');
+			require(JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'orders.php');
 		}
 
 		$app = Factory::getApplication();
 		$app->allowCache(false);
 		$app->set('caching', 0);
 
-		$session = $app->getSession();
 		$this->getPaymentCurrency($this->_currentMethod);
 
 		if ((int) $this->_currentMethod->payment_currency == 0) {
@@ -284,52 +265,23 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 			$this->totalOrder = round($paymentCurrency->convertCurrencyTo($this->_currentMethod->payment_currency, $order['details']['BT']->order_total, FALSE), 2);
 		}
 
-		$this->installments = 0;
-		$this->installmentOptions = array();
-
-		if (isset($this->_currentMethod->allow_installments) && $this->_currentMethod->allow_installments) {
-			if (!empty($this->_currentMethod->installments_variations)) {
-				$this->installmentOptions = $this->findInstallments($this->_currentMethod->installments_variations, $this->totalOrder);
-				$this->installments = count($this->installmentOptions) ? max($this->installmentOptions) : 0;
-			} else if ($this->_currentMethod->max_installments > 1) {
-				$this->installmentOptions = [];
-				for ($i = 2; $i <= $this->_currentMethod->max_installments; $i++) {
-					$this->installmentOptions[] = $i;
-				}
-				$this->installments = $this->_currentMethod->max_installments;
-			}
-		}
-
-		$payid = $this->_currentMethod->virtuemart_paymentmethod_id;
-
-		$installments = isset($_POST['installments'][$payid]) ? (int) $_POST['installments'][$payid] : (int) $session->get('vmpayinstallments' . $payid, 0);
-		if ($this->installments > 1 && $installments > 1) {
-			$installments = ($installments > $this->installments) ? $this->installments : $installments;
-		} else {
-			$installments = 0;
-		}
-
+		$acquirer = $this->_currentMethod->acquirer;
+		$demoaccount = $this->_currentMethod->demoaccount;
 		$virtuemart_order_id = VirtueMartModelOrders::getOrderIdByOrderNumber($order['details']['BT']->order_number);
-		$refID = $this->_currentMethod->referenceid == 'order_number' ? $order['details']['BT']->order_number : $virtuemart_order_id;
 
-		$tokenization = isset($_POST['tokenization']) ? (int) $_POST['tokenization'] : (int) $session->get('tokenization');
-		$stored_card_id = isset($_POST['stored_card_id']) ? (int) $_POST['stored_card_id'] : (int) $session->get('stored_card_id');
+		$refID = $this->_currentMethod->referenceid == 'order_number' ? $order['details']['BT']->order_number : $virtuemart_order_id;
 
 		// Prepare data that should be stored in the database
 		$dbValues['order_status'] = $this->_currentMethod->status_pending;
 		$dbValues['order_number'] = $order['details']['BT']->order_number;
-		$dbValues['payment_name'] = $this->_currentMethod->payment_name;
-		$dbValues['virtuemart_order_id'] = $virtuemart_order_id;
-		$dbValues['virtuemart_paymentmethod_id'] = $payid;
+		$dbValues['payment_name'] = $this->renderPluginName($this->_currentMethod);
+		$dbValues['virtuemart_paymentmethod_id'] = $cart->virtuemart_paymentmethod_id;
 		$dbValues['cost_per_transaction'] = $this->_currentMethod->cost_per_transaction;
 		$dbValues['cost_percent_total'] = $this->_currentMethod->cost_percent_total;
 		$dbValues['payment_currency'] = $this->_currentMethod->payment_currency;
 		$dbValues['payment_order_total'] = $this->totalOrder;
 		$dbValues['tax_id'] = $this->_currentMethod->tax_id;
-		$dbValues['installments'] = $installments;
-		$dbValues['tokenize'] = $tokenization;
-		$dbValues['token_id'] = $stored_card_id;
-		$this->storePSPluginInternalData($dbValues, 'virtuemart_order_id', true);
+		$this->storePSPluginInternalData($dbValues);
 
 		$cart->_confirmDone = FALSE;
 		$cart->_dataValidated = FALSE;
@@ -340,11 +292,10 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 			array(
 				'order_id' => $virtuemart_order_id,
 				'order_ref_id' => $refID,
-				'logos' => $this->getLogos($this->_currentMethod),
-				'params' => $this->_currentMethod
+				"logos" => $this->getLogos($this->_currentMethod),
+				"params" => $this->_currentMethod,
 			)
 		);
-
 		$app->input->set('html', $html);
 		vRequest::setVar('html', $html);
 
@@ -354,19 +305,83 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 	}
 
 	/**
+	 * Get the VirtueMart Itemid for the order success page.
+	 * You may need to adjust this based on your site configuration.
+	 *
+	 * @return int
+	 */
+	private function getVirtueMartItemId()
+	{
+		// Get the application instance
+		$app = Factory::getApplication();
+
+		// Get the current menu item
+		$menu = $app->getMenu();
+		$active = $menu->getActive();
+
+		// Check if there is an active menu item
+		if ($active) {
+			return $active->id;
+		} else {
+			// Fallback: Get a default Itemid for VirtueMart (you may need to adjust this)
+			return $menu->getDefault()->id;
+		}
+	}
+
+	/**
+	 * Generate the Request Fund (RF) code for IRIS payments.
+	 * @param string $dias_customer_code The DIAS customer code of the merchant.
+	 * @param mixed $orderId The ID of the order.
+	 * @param mixed $amount The amount due.
+	 * @return string The generated RF code.
+	 */
+	public static function generateIrisRFCode(string $dias_customer_code, $orderId, $amount)
+	{
+		/* calculate payment check code */
+		$paymentSum = 0;
+
+		if ($amount > 0) {
+			$ordertotal = str_replace([','], '.', (string) $amount);
+			$ordertotal = number_format($ordertotal, 2, '', '');
+			$ordertotal = strrev($ordertotal);
+			$factor = [1, 7, 3];
+			$idx = 0;
+			for ($i = 0; $i < strlen($ordertotal); $i++) {
+				$idx = $idx <= 2 ? $idx : 0;
+				$paymentSum += $ordertotal[$i] * $factor[$idx];
+				$idx++;
+			}
+		}
+
+		$orderIdNum = (int) filter_var($orderId, FILTER_SANITIZE_NUMBER_INT);
+
+		$randomNumber = substr(str_pad($orderIdNum, 13, '0', STR_PAD_LEFT), -13);
+		$paymentCode = $paymentSum ? ($paymentSum % 8) : '8';
+		$systemCode = '12';
+		$tempCode = $dias_customer_code . $paymentCode . $systemCode . $randomNumber . '271500';
+		$mod97 = bcmod($tempCode, '97');
+
+		$cd = 98 - (int) $mod97;
+		$cd = str_pad((string) $cd, 2, '0', STR_PAD_LEFT);
+		$rf_payment_code = 'RF' . $cd . $dias_customer_code . $paymentCode . $systemCode . $randomNumber;
+
+		return $rf_payment_code;
+	}
+
+	/**
 	 * @param $html
 	 * @return bool|null|string
 	 */
 	function plgVmOnPaymentResponseReceived(&$html)
 	{
 		if (!class_exists('VirtueMartCart')) {
-			require (JPATH_VM_SITE . DS . 'helpers' . DS . 'cart.php');
+			require(JPATH_VM_SITE . DS . 'helpers' . DS . 'cart.php');
 		}
 		if (!class_exists('shopFunctionsF')) {
-			require (JPATH_VM_SITE . DS . 'helpers' . DS . 'shopfunctionsf.php');
+			require(JPATH_VM_SITE . DS . 'helpers' . DS . 'shopfunctionsf.php');
 		}
 		if (!class_exists('VirtueMartModelOrders')) {
-			require (JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'orders.php');
+			require(JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'orders.php');
 		}
 
 		$app = Factory::getApplication();
@@ -404,6 +419,8 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		}
 
 		$payment = is_array($payments) ? end($payments) : $payments;
+		//$order_number = $payment->order_number;
+		$payment_name = $this->renderPluginName($this->_currentMethod);
 
 		$orderModel = VmModel::getModel('orders');
 		$order = $orderModel->getOrder($virtuemart_order_id);
@@ -418,15 +435,12 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 			$total = (!isset($payment->payment_order_total) || !$payment->payment_order_total) ? $api->paymentTotal : $payment->payment_order_total;
 			$total = (!isset($payment->cardlink_paymenttotal) || !$payment->cardlink_paymenttotal) ? $total : $payment->cardlink_paymenttotal;
 
-			if ($_POST['extToken']) {
-				$this->saveToken($_POST, $order);
-			}
-
 			VmConfig::loadJLang('com_virtuemart_orders', TRUE);
 			$html = $this->renderByLayout(
 				'response',
 				array(
 					"success" => true,
+					"payment_name" => $payment_name,
 					"response" => $responseData,
 					"payment" => $payment,
 					"order" => $order,
@@ -444,16 +458,12 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 	function plgVmOnUserPaymentCancel()
 	{
 		if (!class_exists('VirtueMartModelOrders')) {
-			require (JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'orders.php');
+			require(JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'orders.php');
 		}
 
 		$app = Factory::getApplication();
 		$virtuemart_paymentmethod_id = $app->input->getInt('pm', 0);
 		$orderReference = $app->input->get('on', $app->input->get('orderid'));
-
-		$orderid = $response['orderid'];
-		$order_model = VmModel::getModel('orders');
-		//$myorder = $order_model->getOrder($orderid);
 
 		if (empty($orderReference) or empty($virtuemart_paymentmethod_id) or !$this->selectedThisByMethodId($virtuemart_paymentmethod_id)) {
 			return NULL;
@@ -483,7 +493,7 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 
 		if ($this->validateDigest()) {
 			$this->handlePaymentUserCancel($virtuemart_order_id);
-			Factory::getApplication()->enqueueMessage(vmText::_('VMPAYMENT_CARDLINKCARD_FAILED_TRYAGAIN'), 'error');
+			Factory::getApplication()->enqueueMessage(vmText::_('VMPAYMENT_CARDLINKIRIS_FAILED_TRYAGAIN'), 'error');
 			if (isset($_POST['message']))
 				vmWarn($_POST['message']);
 		}
@@ -493,7 +503,7 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 	function plgVmOnPaymentNotification()
 	{
 		if (!class_exists('VirtueMartModelOrders')) {
-			require (JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'orders.php');
+			require(JPATH_VM_ADMINISTRATOR . DS . 'models' . DS . 'orders.php');
 		}
 
 		$cardlink_data = (array) $_POST;
@@ -543,12 +553,11 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		$order_history = array(
 			'customer_notified' => 1,
 			'order_status' => $transactionStatus == 'CAPTURED' ? $this->_currentMethod->status_success : $this->_currentMethod->status_authorization,
-			'comments' => Text::sprintf('VMPAYMENT_CARDLINKCARD_SUCCESS_COMMENT', $refID, $cardlink_data['txId'], $transactionStatus),
+			'comments' => Text::sprintf('VMPAYMENT_CARDLINKIRIS_SUCCESS_COMMENT', $refID, $cardlink_data['txId'], $transactionStatus),
 		);
 
 		$db = Factory::getContainer()->get(DatabaseInterface::class);
-		$query = 'SELECT COUNT(id) FROM `' . $this->_tablename . '` WHERE `cardlink_txid`=' . $db->quote($cardlink_data['txId']);
-		$db->setQuery($query);
+		$db->setQuery('SELECT COUNT(id) FROM `' . $this->_tablename . '` WHERE `cardlink_txid`=' . $db->quote($cardlink_data['txId']));
 		$exists = (int) $db->loadResult();
 
 		$this->log('plgVmOnPaymentNotification: order_history', array_merge($order_history, array('exists' => $exists)));
@@ -560,7 +569,6 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 
 		$this->_storeCardlinkInternalData($cardlink_data, $virtuemart_order_id, $payments[0]->virtuemart_paymentmethod_id, $order_number);
 		$orderModel->updateStatusForOneOrder($virtuemart_order_id, $order_history, TRUE);
-
 		return TRUE;
 	}
 
@@ -593,11 +601,6 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 				$html .= $this->getHtmlRowBE('VMPAYMENT_CARDLINKCARD_DATE', $payment->created_on);
 				$html .= $this->getHtmlRowBE('CARDLINKCARD_PAYMENT_METHOD', strtoupper($payment->cardlink_paymethod));
 				$html .= $this->getHtmlRowBE('CARDLINKCARD_PAYMENT_STATUS', $payment->cardlink_status);
-
-				if ($payment->installments > 1) {
-					$html .= $this->getHtmlRowBE('CARDLINKCARD_INSTALLMENTS_TITLE', $payment->installments);
-				}
-
 				$html .= $this->getHtmlRowBE('CARDLINKCARD_TRANSACTION_ID', $payment->cardlink_txid);
 				$html .= $this->getHtmlRowBE('CARDLINKCARD_PAYMENT_REFERENCE', $payment->cardlink_paymentref);
 
@@ -648,30 +651,6 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		$response = null;
 
 		switch ($task) {
-			case 'deleteToken':
-				$stored_card_id_value = $_POST['stored_card_id_value'];
-
-				if ($stored_card_id_value) {
-					$user_id = Factory::getApplication()->getIdentity()->id;
-					$db = Factory::getContainer()->get(DatabaseInterface::class);
-
-					$query = $db->getQuery(true);
-					$query->delete($db->quoteName('#__virtuemart_payment_plg_' . $this->pluginName . '_tokens'));
-					$query->where([
-						$db->quoteName('token_id') . ' = :token_id',
-						$db->quoteName('user_id') . ' = :user_id'
-					]);
-
-					$query
-						->bind(':token_id', $stored_card_id_value)
-						->bind(':user_id', $user_id, Joomla\Database\ParameterType::INTEGER);
-
-					$db->setQuery($query);
-					$status = $db->execute();
-					$response = ['status' => $status];
-				}
-				break;
-
 			case 'checkOrderStatus':
 				$order_id = $_POST['order_id'];
 				$order = $this->getOrderByID($order_id)[0];
@@ -679,8 +658,8 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 					return false;
 				}
 
-				$confirmUrl = Uri::root() . '?com=cardlink&type=card&status=ok&pm=' . $order->virtuemart_paymentmethod_id . '&on=' . $order->order_number;
-				$cancelUrl = uri::root() . '?com=cardlink&type=card&status=cancel&pm=' . $order->virtuemart_paymentmethod_id . '&on=' . $order->order_number;
+				$confirmUrl = Uri::root() . '?com=cardlink&type=iris&status=ok&pm=' . $order->virtuemart_paymentmethod_id . '&on=' . $order->order_number;
+				$cancelUrl = uri::root() . '?com=cardlink&type=iris&status=cancel&pm=' . $order->virtuemart_paymentmethod_id . '&on=' . $order->order_number;
 
 				if ($order->order_status == 'P') {
 					$redirected = true;
@@ -700,13 +679,10 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 				}
 		}
 
-		$app = Factory::getApplication();
-		// Set the response content type to JSON
-		$app->setHeader('Content-Type', 'application/json', true);
-
+		header('Content-Type: application/json');
 		echo json_encode($response);
 
-		$app->close();
+		Factory::getApplication()->close();
 	}
 
 	function plgVmOnStoreInstallPaymentPluginTable($jplugin_id)
@@ -755,48 +731,6 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		}
 	}
 
-	function saveToken($response, $orderDetails = null)
-	{
-		$token = $response['extToken'];
-		$last4 = $response['extTokenPanEnd'];
-		$payMethod = $response['payMethod'];
-		$extTokenExp = $response['extTokenExp'];
-		$extTokenExpYear = substr($extTokenExp, 0, 4);
-		$extTokenExpMonth = substr($extTokenExp, 4, 2);
-
-		if ($orderDetails == null) {
-			$orderReference = $response['orderid'];
-			$orderReference = substr($orderReference, 0, strlen($orderReference) - self::OrderId_SuffixLength);
-			$order_model = VmModel::getModel('orders');
-			$myorderid = $order_model->getOrderIdByOrderNumber($orderReference);
-			$orderDetails = $order_model->getOrder($myorderid);
-		}
-
-		$user_id = $orderDetails['details']['BT']->virtuemart_user_id;
-
-		if ($user_id != null) {
-			$db = Factory::getContainer()->get(DatabaseInterface::class);
-			$query = 'SELECT * FROM `' . $db->getPrefix() . 'virtuemart_payment_plg_' . $this->gatewayName . '_tokens` WHERE `user_id`=' . $user_id;
-			$db->setQuery($query);
-			$user_tokens = $db->loadObjectList();
-			$token_exists = 0;
-
-			if (!empty($user_tokens)) {
-				foreach ($user_tokens as $key => $row) {
-					if ($row->card_type == $payMethod && $row->last4 == $last4 && $row->expiry_year == $extTokenExpYear && $row->expiry_month == $extTokenExpMonth) {
-						$token_exists = 1;
-					}
-				}
-			}
-
-			if (!$token_exists) {
-				$db = Factory::getContainer()->get(DatabaseInterface::class);
-				$db->setQuery("INSERT INTO `#__virtuemart_payment_plg_cardlinkcard_tokens` (token, user_id, type, last4, expiry_year, expiry_month, card_type) VALUES ('" . $token . "', '" . $user_id . "', 'CC', '" . $last4 . "', '" . $extTokenExpYear . "', '" . $extTokenExpMonth . "', '" . $payMethod . "')");
-				$result = $db->execute();
-			}
-		}
-	}
-
 	/*********************/
 	/* Private functions */
 	/*********************/
@@ -817,11 +751,10 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		// Set the query and load the result
 		$db->setQuery($query);
 
-		$response_fields = $db->loadAssoc();
+		$response_fields = array();
 		$response_fields['order_number'] = $order_number;
 		$response_fields['virtuemart_order_id'] = $virtuemart_order_id;
 		$response_fields['virtuemart_paymentmethod_id'] = $virtuemart_paymentmethod_id;
-		$response_fields['payment_name'] = $this->_currentMethod->payment_name;
 
 		if (count($cardlink_data)) {
 			foreach ($cardlink_data as $key => $value) {
@@ -1005,55 +938,14 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		}
 	}
 
-	protected function renderPluginName($activeMethod, $displayInstallmentsTip = true)
+	protected function renderPluginName($activeMethod)
 	{
-		$app = Factory::getApplication();
-		$session = $app->getSession();
-
 		$plugin_name = $this->_psType . '_name';
 		$plugin_desc = $this->_psType . '_desc';
-		$description = '';
 		$logos = $this->getLogos($activeMethod);
 		$pluginName = $logos . '<span class="' . $this->_type . '_name">' . $activeMethod->$plugin_name . '</span>';
 		if (!empty($activeMethod->$plugin_desc)) {
 			$pluginName .= '<span class="' . $this->_type . '_description">' . $activeMethod->$plugin_desc . '</span>';
-		}
-
-		$this->installments = 0;
-		$this->installmentOptions = array();
-
-		if (isset($activeMethod->allow_installments) && $activeMethod->allow_installments) {
-			if (!empty($activeMethod->installments_variations)) {
-				$this->installmentOptions = $this->findInstallments($activeMethod->installments_variations, $this->totalOrder);
-				$this->installments = count($this->installmentOptions) ? max($this->installmentOptions) : 0;
-			} else if ($activeMethod->max_installments > 1) {
-				$this->installmentOptions = [];
-				for ($i = 2; $i <= $activeMethod->max_installments; $i++) {
-					$this->installmentOptions[] = $i;
-				}
-				$this->installments = $activeMethod->max_installments;
-			}
-		}
-
-		if ($this->installments > 0) {
-			$installs = (int) $session->get('vmpayinstallments' . $activeMethod->virtuemart_paymentmethod_id, 0);
-			if ($installs > $this->installments) {
-				$installs = $this->installments;
-				$session->set('vmpayinstallments' . $activeMethod->virtuemart_paymentmethod_id, $installs);
-			}
-			$gateway = strtoupper($this->gatewayName);
-
-			if ($displayInstallmentsTip || $installs > 1) {
-				$pluginName .= ' <span class="vmpayment_description vminstallments">';
-				$pluginName .= ($installs < 2)
-					? '<span class="no-print">' . Text::sprintf('VMPAYMENT_' . $gateway . '_MAXINSTALLMENTS', $this->installments) . '</span>'
-					: Text::sprintf('VMPAYMENT_' . $gateway . '_SELECTEDINSTALLMENTS', $installs);
-				$pluginName .= '</span>';
-			}
-		}
-
-		if (isset($activeMethod->tokenization)) {
-			$this->tokenizationOption = $activeMethod->tokenization;
 		}
 
 		return $pluginName;
@@ -1062,18 +954,17 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 	protected function getPluginHtml($plugin, $selectedPlugin, $pluginSalesPrice)
 	{
 		static $results = array();
+
 		$pluginmethod_id = $this->_idName;
 		$pluginName = $this->_psType . '_name';
-
-		$isSelectedPlugin = $selectedPlugin == $plugin->$pluginmethod_id;
-		$checked = $isSelectedPlugin ? 'checked="checked"' : '';
+		$checked = ($selectedPlugin == $plugin->$pluginmethod_id) ? 'checked="checked"' : '';
 
 		$hashKey = $this->_idName . $plugin->$pluginmethod_id;
 		if (isset($results[$hashKey]))
 			return $results[$hashKey];
 
 		if (!class_exists('CurrencyDisplay')) {
-			require (VMPATH_ADMIN . DS . 'helpers' . DS . 'currencydisplay.php');
+			require(VMPATH_ADMIN . DS . 'helpers' . DS . 'currencydisplay.php');
 		}
 		$currency = CurrencyDisplay::getInstance();
 		$costDisplay = "";
@@ -1093,208 +984,17 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		}
 		$dynUpdate = '';
 		if (VmConfig::get('oncheckout_ajax', false)) {
-			//$url = Route::_('index.php?option=com_virtuemart&view=cart&task=updatecart&'. $this->_idName. '='.$plugin->$pluginmethod_id );
 			$dynUpdate = ' data-dynamic-update="1" ';
 		}
-
-		$installmentsHTML = $isSelectedPlugin && method_exists($this, 'installmentsHTML') ? $this->installmentsHTML($plugin, $this->installmentOptions) : '';
-
-		$tokensHTML = $isSelectedPlugin && method_exists($this, 'tokenizationHTML') ? $this->tokenizationHTML($plugin, $this->tokenizationOption) : '';
 
 		$html = '<input type="radio"' . $dynUpdate . ' name="' . $pluginmethod_id . '" id="' . $this->_psType . '_id_' . $plugin->$pluginmethod_id . '"   value="' . $plugin->$pluginmethod_id . '" ' . $checked . ' />' . PHP_EOL
 			. '<label for="' . $this->_psType . '_id_' . $plugin->$pluginmethod_id . '">'
 			. '<span class="' . $this->_type . ' ' . $this->gatewayName . '">' . $plugin->$pluginName . $costDisplay . '</span>'
-			. $installmentsHTML
-			. $tokensHTML
 			. '</label>'
 			. PHP_EOL;
 
 		$results[$hashKey] = $html;
 		return $html;
-	}
-
-	protected function tokenizationHTML($plugin, $tokenizationOption)
-	{
-		if (!$tokenizationOption) {
-			return '';
-		}
-		$html = '';
-
-		$app = Factory::getApplication();
-		$session = $app->getSession();
-		$tokenization_enabled = boolval(isset($_POST['tokenization']) ? (int) $_POST['tokenization'] : (int) $session->get('tokenization'));
-		$stored_card_id = isset($_POST['stored_card_id']) ? $_POST['stored_card_id'] : $session->get('stored_card_id');
-		$user_id = Factory::getApplication()->getIdentity()->id;
-
-		if ($user_id > 0) {
-			if ($stored_card_id != 'new') {
-				$tokenization_enabled = 0;
-			}
-
-			$html .= $this->get_user_tokens_html($tokenization_enabled, $stored_card_id, $user_id);
-		}
-		return $html;
-	}
-
-	protected function get_user_tokens_html($tokenization_enabled, $stored_card_id, $user_id)
-	{
-		$db = Factory::getContainer()->get(DatabaseInterface::class);
-		$db->setQuery('SELECT * FROM `#__virtuemart_payment_plg_cardlinkcard_tokens` WHERE `user_id`=' . $user_id);
-		$user_tokens = $db->loadObjectList();
-
-		$html = '';
-		$tokens_html = '';
-
-		$dynUpdate = '';
-		if (VmConfig::get('oncheckout_ajax', false)) {
-			$dynUpdate = ' data-dynamic-update="1" ';
-		}
-
-		$html .= '<div class="payment-cards">';
-		if (!empty($user_tokens)) {
-			foreach ($user_tokens as $key => $row) {
-				if ($row->card_type == 'mastercard') {
-					$icon = '<img src="' . Uri::root() . '/plugins/vmpayment/' . $this->gatewayName . '/assets/images/mastercard.svg" alt="mastercard">';
-				} elseif ($row->card_type == 'visa') {
-					$icon = '<img src="' . Uri::root() . '/plugins/vmpayment/' . $this->gatewayName . '/assets/images/visa.svg" alt="visa">';
-				} elseif ($row->card_type == 'amex') {
-					$icon = '<img src="' . Uri::root() . '/plugins/vmpayment/' . $this->gatewayName . '/assets/images/amex.svg" alt="visa">';
-				} elseif ($row->card_type == 'diners') {
-					$icon = '<img src="' . Uri::root() . '/plugins/vmpayment/' . $this->gatewayName . '/assets/images/dinersclub.svg" alt="visa">';
-				} elseif ($row->card_type == 'discover') {
-					$icon = '<img src="' . Uri::root() . '/plugins/vmpayment/' . $this->gatewayName . '/assets/images/discover.svg" alt="visa">';
-				} else {
-					$icon = $row->card_type;
-				}
-				$tokens_html .= '<div class="payment-cards__field">';
-				$tokens_html .= '<label for="card-' . $key . '">
-									<input type="radio" ' . $dynUpdate . ' id="card-' . $key . '" name="stored_card_id" value="' . $row->token_id . '" ' . ($stored_card_id == $row->token_id ? ' checked' : '') . '> <span>' .
-					$icon . ' ************' . $row->last4 . ' ' . $row->expiry_month . '/' . $row->expiry_year .
-					'</span><a href="#" title="' . vmText::_('VMPAYMENT_CARDLINKCARD_TOKENIZATION_REMOVE_CARD') . '" class="remove" aria-label="' . vmText::_('VMPAYMENT_CARDLINKCARD_TOKENIZATION_REMOVE_CARD') . '">x</a>' .
-					'</label>';
-				$tokens_html .= '</div>';
-			}
-		}
-
-		if ($tokens_html !== "") {
-			$html .= '<div class="payment-cards__fields">';
-			$html .= $tokens_html;
-			$html .= '<div class="payment-cards__field">';
-			$html .= '<label for="new-card"><input type="radio" ' . $dynUpdate . ' id="new-card" name="stored_card_id" value="new" ' . ($stored_card_id == 'new' ? ' checked' : '') . '> <span>' . vmText::_('VMPAYMENT_CARDLINKCARD_USE_OTHER_CARD') . '</span></label>';
-			$html .= '</div>';
-			$html .= '</div>';
-			$html .= '<div class="payment-cards-new-card payment-cards__field" ' . ($stored_card_id != 'new' ? 'style="display:none"' : '') . ' >';
-		} else {
-			$html .= '<div class="payment-cards-new-card payment-cards__field">';
-			$html .= '<input type="hidden" name="stored_card_id" value="new" />';
-		}
-
-		$html .= '<label for="tokenization">
-					<input type="checkbox" ' . $dynUpdate . ' id="tokenization" name="tokenization" value="1" ' . ($tokenization_enabled ? 'checked' : '') . '>
-					<span>' . vmText::_('VMPAYMENT_CARDLINKCARD_TOKENIZATION_STORE') . '</span>
-				 </label>';
-		$html .= '</div>';
-		$html .= '</div>';
-
-		return $html;
-	}
-
-	protected function installmentsHTML($plugin, $installmentOptions = array())
-	{
-		if (!count($installmentOptions))
-			return '';
-		asort($installmentOptions);
-		$maxInstall = max($installmentOptions);
-		if ($maxInstall <= 1)
-			return '';
-
-		$payid = $plugin->virtuemart_paymentmethod_id;
-		$app = Factory::getApplication();
-		$session = $app->getSession();
-		$gateway = strtoupper($this->gatewayName);
-		$selected = isset($_POST['installments'][$payid]) ? (int) $_POST['installments'][$payid] : (int) $session->get('vmpayinstallments' . $payid, 0);
-
-		$html = '<div class="payment-installments"><select class="installments" id="installments' . $payid . '" name="installments[' . $payid . ']">';
-		if (!(int) $plugin->nooption) {
-			$html .= '<option value="0"' . (!$selected ? ' selected="selected"' : '') . '>' . JText::_('VMPAYMENT_' . $gateway . '_NO_INSTALLMENTS') . '</option>';
-		}
-		for ($i = 2; $i <= $maxInstall; $i++) {
-			$html .= '<option value="' . $i . '"' . ($i == $selected ? ' selected="selected"' : '') . '>' . JText::sprintf('VMPAYMENT_' . $gateway . '_INSTALLMENTS', $i) . '</option>';
-		}
-		$html .= '</select>
-		</div>';
-		$script = '<script>
-			jQuery(document).ready(function($) {
-				$("body").on("change","select#installments' . $payid . '", function() {
-					selectedPaymentMethod=$("input[name=\'virtuemart_paymentmethod_id\']:checked");
-					var paymethid=selectedPaymentMethod.val();
-					if($(this).prop("id")=="installments"+selectedPaymentMethod.val()){
-						var installments=$(this).val();
-						$.ajaxSetup({ beforeSend: function(jqXHR, settings) { settings.data+="&installments["+paymethid+"]="+installments; } });
-						selectedPaymentMethod.click();
-					}
-				});
-		});
-		</script>';
-
-		if ((int) $plugin->jspos) {
-			$html .= $script;
-		} else {
-			Factory::getApplication()->getDocument()->addCustomTag($script);
-		}
-
-		//remove Chosen or SelectBoxIt
-		Factory::getApplication()->getDocument()->addStyleDeclaration('select.installments{display: block !important;} div[id^=installments].chzn-container, span[id^=installments].selectboxit-container{display: none !important;}');
-		$session->set('vmpayinstallments' . $payid, $selected);
-		return $html;
-	}
-
-	protected function findInstallments($installs, $total)
-	{
-		if ($total <= 0)
-			return array();
-
-		$cart = VirtueMartCart::getCart(false);
-		$minProductInstall = 1;
-		$maxProductInstall = 0;
-		$installMode = '';
-
-		foreach ($cart->products as $product) {
-			if (empty($product->customfields))
-				continue;
-			foreach ($product->customfields as $custom) {
-				if ($custom->custom_element == 'vmweinstallments' && !empty($custom->installs) && $custom->installs > $maxProductInstall) {
-					$maxProductInstall = $custom->installs;
-					$minProductInstall = $custom->installsfrom;
-					$installMode = $custom->installmode;
-					break;
-				}
-			}
-		}
-
-		$installments = array();
-		if ($installMode == 'exact' && $maxProductInstall) {
-			$installments = array($maxProductInstall);
-		} else if ($installMode == 'range' && $maxProductInstall) {
-			for ($i = $minProductInstall; $i <= $maxProductInstall; $i++) {
-				$installments[] = $i;
-			}
-		} else {
-			$tmp = @explode(",", trim($installs));
-			if (empty($installs) || !count($tmp))
-				return array();
-
-			foreach ($tmp as $inst) {
-				$vars = explode(":", $inst, 2);
-				$amount = (float) trim($vars[0]);
-				$install = (int) trim($vars[1]);
-				if ($amount >= 0 && $total >= $amount && (!$maxProductInstall || $maxProductInstall >= $install)) {
-					$installments[] = $install;
-				}
-			}
-		}
-
-		return $installments;
 	}
 
 	protected function getOrderByID($virtuemart_order_id)
@@ -1399,7 +1099,7 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 	function redirectToCart($msg = NULL)
 	{
 		if (!$msg) {
-			$msg = vmText::_('VMPAYMENT_CARDLINKCARD_ERROR_TRY_AGAIN');
+			$msg = vmText::_('VMPAYMENT_CARDLINKIRIS_ERROR_TRY_AGAIN');
 		}
 		$app = Factory::getApplication();
 		$app->redirect(Route::_('index.php?option=com_virtuemart&view=cart&Itemid=' . vRequest::getInt('Itemid'), false), $msg);
@@ -1423,7 +1123,7 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 
 		// Load the VirtueMart payment method model
 		if (!class_exists('VirtueMartModelPaymentmethod')) {
-			require (JPATH_VM_ADMINISTRATOR . '/models/paymentmethod.php');
+			require(JPATH_VM_ADMINISTRATOR . '/models/paymentmethod.php');
 		}
 
 		$paymentMethodModel = VmModel::getModel('paymentmethod');
@@ -1432,7 +1132,7 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		return $paymentMethod;
 	}
 
-	public function onAjaxCardlinkcard()
+	public function onAjaxCardlinkiris()
 	{
 		// Check for a valid token to prevent CSRF
 		Session::checkToken('post') or jexit('Invalid Token');
@@ -1476,7 +1176,6 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 		}
 		$lang = explode('-', $app->getLanguage()->getTag());
 
-		$paymentData = array_pop($this->_getGatewayInternalData($orderId, $refID));
 		$billCountry = ShopFunctions::getCountryByID($order['details']['BT']->virtuemart_country_id, 'country_2_code');
 		$shipCountry = ShopFunctions::getCountryByID($order['details']['ST']->virtuemart_country_id, 'country_2_code');
 
@@ -1485,7 +1184,7 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 			'mid' => trim($currentMethod->mid),
 			'lang' => $lang[0] == 'el' ? 'el' : 'en',
 			'orderid' => str_replace(array('_', '-'), '', $refID) . 'x' . self::_getRandomStringHash(self::OrderId_SuffixLength - 1),
-			'orderDesc' => 'Order: ' . $refID,
+			'orderDesc' => self::generateIrisRFCode($currentMethod->dias_customer_code, $orderId, $this->totalOrder),
 			'orderAmount' => number_format($order['details']['BT']->order_total, 2, ".", ""),
 			'currency' => ShopFunctions::getCurrencyByID($order['details']['BT']->payment_currency_id, 'currency_code_3'),
 			'payerEmail' => $order['details']['BT']->email,
@@ -1500,7 +1199,8 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 			'shipZip' => str_replace(' ', '', $order['details']['ST']->zip),
 			'shipCity' => trim($order['details']['ST']->city),
 			'shipAddress' => !empty($order['details']['ST']->address_1) ? trim($order['details']['ST']->address_1) : trim($order['details']['ST']->address_2),
-			'trType' => (int) $currentMethod->paytype,
+			'payMethod' => 'IRIS',
+			'trType' => 1,
 		);
 
 		if ($billCountry == 'GR' || empty($post['billState'])) {
@@ -1508,19 +1208,12 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 			unset($post['shipState']);
 		}
 
-		$installments = $paymentData->installments;
-
-		if ($installments > 1) {
-			$post['extInstallmentoffset'] = 0;
-			$post['extInstallmentperiod'] = $installments;
-		}
-
 		if ($currentMethod->css_url) {
 			$post['cssUrl'] = $currentMethod->css_url;
 		}
 
-		$post['confirmUrl'] = Uri::root() . '?com=cardlink&type=card&status=ok&pm=' . $order['details']['BT']->virtuemart_paymentmethod_id . '&on=' . $refID;
-		$post['cancelUrl'] = Uri::root() . '?com=cardlink&type=card&status=cancel&pm=' . $order['details']['BT']->virtuemart_paymentmethod_id . '&on=' . $refID;
+		$post['confirmUrl'] = Uri::root() . '?com=cardlink&type=iris&status=ok&pm=' . $order['details']['BT']->virtuemart_paymentmethod_id . '&on=' . $refID;
+		$post['cancelUrl'] = Uri::root() . '?com=cardlink&type=iris&status=cancel&pm=' . $order['details']['BT']->virtuemart_paymentmethod_id . '&on=' . $refID;
 
 		$urlParams = array('Itemid' => vRequest::getInt('Itemid', (int) $app->getMenu()->getActive()->id), 'lang' => vRequest::getCmd('lang', $lang[0]));
 		foreach ($urlParams as $key => $val) {
@@ -1528,24 +1221,6 @@ class plgVmPaymentCardlinkCard extends vmPSPlugin
 				continue;
 			$post['confirmUrl'] .= '&' . $key . '=' . urlencode($val);
 			$post['cancelUrl'] .= '&' . $key . '=' . urlencode($val);
-		}
-
-		if (!JFactory::getUser()->guest) {
-			$user_id = $app->getIdentity()->id;
-			$stored_card_id = $paymentData->token_id;
-
-			if ($paymentData->tokenize) {
-				$post['extTokenOptions'] = 100;
-			} else if ($stored_card_id) {
-				$db = Factory::getContainer()->get(DatabaseInterface::class);
-				$db->setQuery('SELECT * FROM `#__virtuemart_payment_plg_cardlinkcard_tokens` WHERE `user_id`=' . $user_id . ' LIMIT 1');
-				$user_tokens = $db->loadObjectList();
-
-				if (count($user_tokens) == 1) {
-					$post['extTokenOptions'] = 110;
-					$post['extToken'] = $user_tokens[0]->token;
-				}
-			}
 		}
 
 		$post['var1'] = $refID;
