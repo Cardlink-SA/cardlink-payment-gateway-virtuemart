@@ -77,9 +77,14 @@
 			$storedCardRadioOption.trigger('change');
 		}
 
-		var $iframe = $('#payment_iframe');
-		if ($iframe.length > 0) {
-			modalPayment($iframe);
+		var searchParams = new URLSearchParams(window.location.search);
+		var $vmOrderDone = $('.vm-wrap.vm-order-done');
+
+		if ($vmOrderDone.length > 0 || (searchParams.has('task') && searchParams.get('task') == 'orderdone')) {
+			var $iframe = $('#payment_iframe');
+			if ($iframe.length > 0) {
+				modalPayment($iframe);
+			}
 		}
 	});
 

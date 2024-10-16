@@ -19,8 +19,8 @@ $logoURL = Uri::root(true) . '/plugins/vmpayment/cardlinkiris/assets/images/iris
 <div id="cardlink" class="cardlinkiris paymentgateway" style="margin:0 auto;text-align:center;">
 	<img src="<?php echo $logoURL; ?>" border="0" id="cardlinkIrisLogo" style="width:350px;cursor:pointer;" />
 
-	<form id="vmPaymentForm" name="payCardlinkIris" method="post" action="about:blank" accept-charset="UTF-8"
-		data-date="<?php echo date("Y-m-d H:i:s"); ?>">
+	<form id="vmPaymentFormCardlinkIris" name="payCardlinkIris" method="post" action="about:blank" target="_top"
+		accept-charset="UTF-8" data-date="<?php echo date("Y-m-d H:i:s"); ?>">
 	</form>
 
 	<script>
@@ -36,7 +36,7 @@ $logoURL = Uri::root(true) . '/plugins/vmpayment/cardlinkiris/assets/images/iris
 				success: function (response) {
 					if (response.success) {
 						if (response.data.url) {
-							let $form = $('form#vmPaymentForm');
+							let $form = $('form#vmPaymentFormCardlinkIris');
 							$form.attr('action', response.data.url);
 							$.each(response.data.post_data, function (k, v) {
 								$('<input>').attr({ type: 'hidden', id: k, name: k, value: v }).appendTo($form);

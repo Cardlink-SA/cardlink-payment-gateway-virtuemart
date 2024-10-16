@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension version="2.5" type="plugin" group="system" method="upgrade">
     <name>Cardlink Payment Gateway Helper</name>
-    <version>1.1.0</version>
-    <modified>19-09-2024</modified>
+    <version>1.1.1</version>
+    <modified>14-10-2024</modified>
     <creationDate>11/07/2024</creationDate>
     <author>Cardlink</author>
     <authorEmail>info@cardlink.gr</authorEmail>

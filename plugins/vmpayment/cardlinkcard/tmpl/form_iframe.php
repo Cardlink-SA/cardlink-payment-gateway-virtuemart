@@ -18,11 +18,11 @@ $logos = str_replace('<img ', '<img', $logos);
 $logoURL = Uri::root(true) . '/plugins/vmpayment/cardlinkcard/assets/images/cardlink.svg';
 
 ?>
-<div id="cardlinkcard" class="cardlinkcard paymentgateway" style="margin:0 auto;text-align:center;">
+<div id="cardlinkcard" class="cardlinkcard paymentgateway card-iframe" style="margin:0 auto;text-align:center;">
 	<?php /*/ ?><img src="<?php echo $logoURL; ?>" border="0" id="cardlinklogo" style="width:350px;cursor:pointer;" /><?php /*/ ?>
 
-	<form id="vmPaymentForm" name="payCardlinkCard" method="post" action="about:blank" target="payment_iframe"
-		accept-charset="UTF-8" data-date="<?php echo date("Y-m-d H:i:s"); ?>">
+	<form id="vmPaymentFormCardlinkCardIframe" name="payCardlinkCardIframe" method="post" action="about:blank"
+		target="payment_iframe" accept-charset="UTF-8" data-date="<?php echo date("Y-m-d H:i:s"); ?>">
 	</form>
 
 	<script>
@@ -38,7 +38,7 @@ $logoURL = Uri::root(true) . '/plugins/vmpayment/cardlinkcard/assets/images/card
 				success: function (response) {
 					if (response.success) {
 						if (response.data.url) {
-							let $form = $('form#vmPaymentForm');
+							let $form = $('form#vmPaymentFormCardlinkCardIframe');
 							$form.attr('action', response.data.url);
 							$.each(response.data.post_data, function (k, v) {
 								$('<input>').attr({ type: 'hidden', id: k, name: k, value: v }).appendTo($form);
@@ -47,13 +47,13 @@ $logoURL = Uri::root(true) . '/plugins/vmpayment/cardlinkcard/assets/images/card
 								+ '<?php echo vmText::_('VMPAYMENT_CARDLINKCARD_REDIRECT_MESSAGE'); ?>'
 								+ '</button>')
 								.on('click', function () {
-									document.payCardlinkCard.submit();
+									document.payCardlinkCardIframe.submit();
 									document.getElementById('modal').style.display = 'block';
 								})
 								.appendTo($form);
 
 							document.getElementById('modal').style.display = 'block';
-							document.payCardlinkCard.submit();
+							document.payCardlinkCardIframe.submit();
 						}
 					} else {
 						console.error('Error:', response.message);

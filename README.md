@@ -3,19 +3,26 @@
 - Contributors: cardlink
 - Tags: payments, payment-gateway
 - Requires at least: Joomla 4.1.0, VirtueMart 4.x
-- Tested up to: Joomle 4.4.3, VirtueMart 4.2.4
+- Tested up to: Joomle 4.4.8, VirtueMart 4.2.4
 - Requires PHP: 7.x - 8.x
 - License: GPLv2 or later
 - License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 ## Changelog
 
-- **1.0.0**
-  - Initial release.
-- **1.0.1**
-  - Optimized digest validation process.
+- **1.1.1**
+  - Minor fixes.
+  - Updated README.
 - **1.1.0**
   - Added support for IRIS payments.
+- **1.0.1**
+  - Optimized digest validation process.
+- **1.0.0**
+  - Initial release.
+
+##  Support tickets
+
+In case that you face any technical issue during the installation process, you can contact the Cardlink e-commerce team at ecommerce_support@cardlink.gr .
 
 ## Description
 
@@ -37,7 +44,9 @@ Once you have completed the requested tests and any changes to your website, you
 8. A text field for providing the absolute or relative (to Cardlink Payment Gateway location on server) URL of custom CSS stylesheet, to apply custom CSS styles in the payment page.
 9. Translation ready for Greek & English languages.
 10. Automatically cancel pending payment orders after a configurable number of minutes using Joomla Scheduled Tasks.
-11. Support for IRIS payments.
+11.	Support for IRIS payments for Nexi acquirer only.
+12.	The IFRAME feature is not supported for IRIS payments
+
 
 ## Installation and Configuration
 
@@ -89,6 +98,11 @@ If you are unsure or unfamiliar with the actions described above, please ask a t
 
 If you are unsure or unfamiliar with the actions described above, please ask a trained IT person or contact your hosting provider to do them for you.
 
-##  Support tickets
 
-In case that you face any technical issue during the installation process, you can contact the Cardlink e-commerce team at ecommerce_support@cardlink.gr .
+## IRIS Payments Setup
+
+To set up IRIS payments, you will need to have the Merchant ID, Shared Secret and DIAS Customer ID specifically issued for use with IRIS. Other settings are similar to the ones for Card Payments.
+
+![iris-configuration-image001.png](README-IMAGES/iris-configuration-image001.png)
+![iris-configuration-image002.png](README-IMAGES/iris-configuration-image002.png)
+![iris-configuration-image003.png](README-IMAGES/iris-configuration-image003.png)

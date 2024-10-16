@@ -63,10 +63,6 @@
 
 			<fieldset name="display_settings_section" label="VMPAYMENT_CARDLINKIRIS_DISPLAY_SETTINGS">
 				<field name="payment_logos" type="vmfiles" label="VMPAYMENT_CARDLINKIRIS_LOGOS" description="VMPAYMENT_CARDLINKIRIS_LOGOS_DESC" directory="/images/virtuemart/payment" hide_default="1" hide_none="0" stripext="0" exclude="^_" />
-				<field name="iframe" type="list" default="0" label="VMPAYMENT_CARDLINKIRIS_IFRAME" description="VMPAYMENT_CARDLINKIRIS_IFRAME_DESC">
-					<option value="0">COM_VIRTUEMART_NO</option>
-					<option value="1">COM_VIRTUEMART_YES</option>
-				</field>
 				<field type="url" name="css_url" size="50" maxlength="200" label="VMPAYMENT_CARDLINKIRIS_CSS_URL" validate="true" default="" hint="VMPAYMENT_CARDLINKIRIS_CSS_URL_DESC" />
 			</fieldset>
 

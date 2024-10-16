@@ -17,11 +17,11 @@ $logos = str_replace('<img ', '<img onclick="document.payCardlinkCard.submit();"
 $logoURL = Uri::root(true) . '/plugins/vmpayment/cardlinkcard/assets/images/cardlink.svg';
 
 ?>
-<div id="cardlinkcard" class="cardlinkcard paymentgateway" style="margin:0 auto;text-align:center;">
+<div id="cardlinkcard" class="cardlinkcard paymentgateway card-redirect" style="margin:0 auto;text-align:center;">
 	<?php /*/ ?><img onclick="document.payCardlinkCard.submit();" src="<?php echo $logoURL; ?>" border="0" id="cardlinklogo"
 style="width:350px;cursor:pointer;" /><?php /*/ ?>
-	<form id="vmPaymentForm" name="payCardlinkCard" method="post" action="about:blank" accept-charset="UTF-8"
-		data-date="<?php echo date("Y-m-d H:i:s"); ?>">
+	<form id="vmPaymentFormCardlinkCard" name="payCardlinkCard" method="post" action="about:blank" target="_top"
+		accept-charset="UTF-8" data-date="<?php echo date("Y-m-d H:i:s"); ?>">
 	</form>
 
 	<script>
@@ -37,7 +37,7 @@ style="width:350px;cursor:pointer;" /><?php /*/ ?>
 				success: function (response) {
 					if (response.success) {
 						if (response.data.url) {
-							let $form = $('form#vmPaymentForm');
+							let $form = $('form#vmPaymentFormCardlinkCard');
 							$form.attr('action', response.data.url);
 							$.each(response.data.post_data, function (k, v) {
 								$('<input>').attr({ type: 'hidden', id: k, name: k, value: v }).appendTo($form);

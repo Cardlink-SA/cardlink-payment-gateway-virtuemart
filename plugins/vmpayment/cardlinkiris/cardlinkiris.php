@@ -57,7 +57,6 @@ class plgVmPaymentCardlinkIris extends vmPSPlugin
 			'payment_logos' => array('', 'char'),
 			'referenceid' => array('order_number', 'char'),
 			'paytype' => array(1, 'int'),
-			'iframe' => array(0, 'int'),
 			'css_url' => array('', 'char'),
 			'version' => array(1, 'int'),
 			'debug' => array(0, 'int'),
@@ -288,12 +287,12 @@ class plgVmPaymentCardlinkIris extends vmPSPlugin
 		$cart->setCartIntoSession();
 
 		$html = $this->renderByLayout(
-			$this->_currentMethod->iframe ? 'form_iframe' : 'form',
+			'form',
 			array(
 				'order_id' => $virtuemart_order_id,
 				'order_ref_id' => $refID,
-				"logos" => $this->getLogos($this->_currentMethod),
-				"params" => $this->_currentMethod,
+				'logos' => $this->getLogos($this->_currentMethod),
+				'params' => $this->_currentMethod,
 			)
 		);
 		$app->input->set('html', $html);
