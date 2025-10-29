@@ -2,10 +2,11 @@
 <extension type="plugin" group="task" method="upgrade">
     <name>Cardlink Cancel Unpaid Orders</name>
     <author>Cardlink</author>
+    <modified>23-09-2025</modified>
     <creationDate>2024-06-03</creationDate>
-    <copyright>Copyright (C) 2024 Cardlink</copyright>
+    <copyright>Copyright (C) 2025 Cardlink</copyright>
     <license>GNU General Public License</license>
-    <version>1.1.0</version>
+    <version>1.1.2</version>
     <description>Plugin to cancel unpaid orders older than a configurable number of minutes in VirtueMart.</description>
     <namespace path="src">Joomla\Plugin\Task\CardlinkCancelUnpaidOrders</namespace>
     <files>

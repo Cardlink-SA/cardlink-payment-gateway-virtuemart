@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension version="2.5" type="plugin" group="system" method="upgrade">
     <name>Cardlink Payment Gateway Helper</name>
-    <version>1.1.1</version>
-    <modified>14-10-2024</modified>
+    <version>1.1.2</version>
+    <modified>23-09-2025</modified>
     <creationDate>11/07/2024</creationDate>
     <author>Cardlink</author>
     <authorEmail>info@cardlink.gr</authorEmail>
     <authorUrl>http://www.cardlink.gr/</authorUrl>
-    <copyright>(C) 2024 Cardlink</copyright>
+    <copyright>(C) 2025 Cardlink</copyright>
     <license>GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html</license>
     <description>Cardlink Payment Gateway Installer</description>
     <scriptfile>script.cardlink.php</scriptfile>

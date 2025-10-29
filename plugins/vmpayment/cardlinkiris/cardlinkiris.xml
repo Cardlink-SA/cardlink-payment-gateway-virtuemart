@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <extension version="2.5" type="plugin" group="vmpayment" method="upgrade">
 	<name>Cardlink Payment Gateway for IRIS</name>
-	<version>1.1.0</version>
-	<modified>19-09-2024</modified>
+	<version>1.1.2</version>
+	<modified>23-09-2025</modified>
 	<creationDate>11/07/2024</creationDate>
 	<author>Cardlink</author>
 	<authorUrl>http://www.cardlink.gr</authorUrl>
-	<copyright>Copyright (C) 2024 Cardlink. All rights reserved.</copyright>
+	<copyright>Copyright (C) 2025 Cardlink. All rights reserved.</copyright>
 	<license>http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL</license>
 	<description>Cardlink Payment Gateway allows you to accept payment through IRIS on your website.</description>
 	<scriptfile>script.cardlinkiris.php</scriptfile>
@@ -55,9 +55,9 @@
 				<field name="secretkey" type="text" size="30" default="" label="VMPAYMENT_CARDLINKIRIS_SECRETKEY"/>
 				<field name="dias_customer_code" type="text" size="30" default="" label="VMPAYMENT_CARDLINKIRIS_DIAS_CUSTOMER_CODE"/>
 				<field name="acquirer" type="list" default="0" label="VMPAYMENT_CARDLINKIRIS_ACQUIRER" description="VMPAYMENT_CARDLINKIRIS_ACQUIRER_DESC">
-					<!-- <option value="0">Cardlink Checkout</option> -->
+					<option value="0">Cardlink Checkout</option>
 					<option value="1">Nexi Checkout</option>
-					<!-- <option value="2">Worldline Greece Checkout</option> -->
+					<option value="2">Worldline Greece Checkout</option>
 				</field>
 			</fieldset>
 

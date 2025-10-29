@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  * Cardlink payment plugin
@@ -1170,6 +1171,8 @@ class plgVmPaymentCardlinkIris extends vmPSPlugin
 
 		$currentMethod = $this->getPaymentMethodFromOrder($order);
 
+		$acquirer = $currentMethod->acquirer;
+
 		if (method_exists('VmConfig', 'loadJLang')) {
 			VmConfig::loadJLang('com_virtuemart_orders', TRUE);
 		}
@@ -1183,7 +1186,7 @@ class plgVmPaymentCardlinkIris extends vmPSPlugin
 			'mid' => trim($currentMethod->mid),
 			'lang' => $lang[0] == 'el' ? 'el' : 'en',
 			'orderid' => str_replace(array('_', '-'), '', $refID) . 'x' . self::_getRandomStringHash(self::OrderId_SuffixLength - 1),
-			'orderDesc' => self::generateIrisRFCode($currentMethod->dias_customer_code, $orderId, $this->totalOrder),
+			'orderDesc' => '',
 			'orderAmount' => number_format($order['details']['BT']->order_total, 2, ".", ""),
 			'currency' => ShopFunctions::getCurrencyByID($order['details']['BT']->payment_currency_id, 'currency_code_3'),
 			'payerEmail' => $order['details']['BT']->email,
@@ -1201,6 +1204,10 @@ class plgVmPaymentCardlinkIris extends vmPSPlugin
 			'payMethod' => 'IRIS',
 			'trType' => 1,
 		);
+
+		if ($acquirer == 1) { // Nexi
+			$post['orderDesc'] = self::generateIrisRFCode($currentMethod->dias_customer_code, $orderId, $this->totalOrder);
+		}
 
 		if ($billCountry == 'GR' || empty($post['billState'])) {
 			unset($post['billState']);
@@ -1228,7 +1235,6 @@ class plgVmPaymentCardlinkIris extends vmPSPlugin
 		$form_data = iconv('utf-8', 'utf-8//IGNORE', implode("", $post)) . $form_secret;
 		$post['digest'] = base64_encode(hash('sha256', ($form_data), true));
 
-		$acquirer = $currentMethod->acquirer;
 		$demoaccount = $currentMethod->demoaccount;
 
 		$url = '';
