@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <extension version="2.5" type="plugin" group="vmpayment" method="upgrade">
 	<name>Cardlink Payment Gateway for IRIS</name>
-	<version>1.1.2</version>
+	<version>1.1.3</version>
 	<modified>23-09-2025</modified>
 	<creationDate>11/07/2024</creationDate>
 	<author>Cardlink</author>
@@ -52,8 +52,7 @@
 					<option value="1">COM_VIRTUEMART_YES</option>
 				</field>
 				<field name="mid" type="text" size="30" default="" label="VMPAYMENT_CARDLINKIRIS_MERCHANTID"/>
-				<field name="secretkey" type="text" size="30" default="" label="VMPAYMENT_CARDLINKIRIS_SECRETKEY"/>
-				<field name="dias_customer_code" type="text" size="30" default="" label="VMPAYMENT_CARDLINKIRIS_DIAS_CUSTOMER_CODE"/>
+				<field name="secretkey" type="text" size="30" default="" label="VMPAYMENT_CARDLINKIRIS_SECRETKEY"/>				
 				<field name="acquirer" type="list" default="0" label="VMPAYMENT_CARDLINKIRIS_ACQUIRER" description="VMPAYMENT_CARDLINKIRIS_ACQUIRER_DESC">
 					<option value="0">Cardlink Checkout</option>
 					<option value="1">Nexi Checkout</option>

@@ -52,7 +52,6 @@ class plgVmPaymentCardlinkIris extends vmPSPlugin
 			'acquirer' => array(1, 'int'),
 			'mid' => array('', 'char'),
 			'secretkey' => array('', 'char'),
-			'dias_customer_code' => array('', 'char'),
 			'demoaccount' => array(0, 'int'),
 			'payment_currency' => array('', 'int'),
 			'payment_logos' => array('', 'char'),
@@ -326,46 +325,6 @@ class plgVmPaymentCardlinkIris extends vmPSPlugin
 			// Fallback: Get a default Itemid for VirtueMart (you may need to adjust this)
 			return $menu->getDefault()->id;
 		}
-	}
-
-	/**
-	 * Generate the Request Fund (RF) code for IRIS payments.
-	 * @param string $dias_customer_code The DIAS customer code of the merchant.
-	 * @param mixed $orderId The ID of the order.
-	 * @param mixed $amount The amount due.
-	 * @return string The generated RF code.
-	 */
-	public static function generateIrisRFCode(string $dias_customer_code, $orderId, $amount)
-	{
-		/* calculate payment check code */
-		$paymentSum = 0;
-
-		if ($amount > 0) {
-			$ordertotal = str_replace([','], '.', (string) $amount);
-			$ordertotal = number_format($ordertotal, 2, '', '');
-			$ordertotal = strrev($ordertotal);
-			$factor = [1, 7, 3];
-			$idx = 0;
-			for ($i = 0; $i < strlen($ordertotal); $i++) {
-				$idx = $idx <= 2 ? $idx : 0;
-				$paymentSum += $ordertotal[$i] * $factor[$idx];
-				$idx++;
-			}
-		}
-
-		$orderIdNum = (int) filter_var($orderId, FILTER_SANITIZE_NUMBER_INT);
-
-		$randomNumber = substr(str_pad($orderIdNum, 13, '0', STR_PAD_LEFT), -13);
-		$paymentCode = $paymentSum ? ($paymentSum % 8) : '8';
-		$systemCode = '12';
-		$tempCode = $dias_customer_code . $paymentCode . $systemCode . $randomNumber . '271500';
-		$mod97 = bcmod($tempCode, '97');
-
-		$cd = 98 - (int) $mod97;
-		$cd = str_pad((string) $cd, 2, '0', STR_PAD_LEFT);
-		$rf_payment_code = 'RF' . $cd . $dias_customer_code . $paymentCode . $systemCode . $randomNumber;
-
-		return $rf_payment_code;
 	}
 
 	/**
@@ -1205,10 +1164,7 @@ class plgVmPaymentCardlinkIris extends vmPSPlugin
 			'trType' => 1,
 		);
 
-		if ($acquirer == 1) { // Nexi
-			$post['orderDesc'] = self::generateIrisRFCode($currentMethod->dias_customer_code, $orderId, $this->totalOrder);
-		}
-
+		// Remove state if country is Greece or state is empty
 		if ($billCountry == 'GR' || empty($post['billState'])) {
 			unset($post['billState']);
 			unset($post['shipState']);

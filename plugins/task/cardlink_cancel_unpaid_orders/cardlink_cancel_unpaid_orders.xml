@@ -6,7 +6,7 @@
     <creationDate>2024-06-03</creationDate>
     <copyright>Copyright (C) 2025 Cardlink</copyright>
     <license>GNU General Public License</license>
-    <version>1.1.2</version>
+    <version>1.1.3</version>
     <description>Plugin to cancel unpaid orders older than a configurable number of minutes in VirtueMart.</description>
     <namespace path="src">Joomla\Plugin\Task\CardlinkCancelUnpaidOrders</namespace>
     <files>
