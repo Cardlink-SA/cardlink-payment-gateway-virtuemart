@@ -32,9 +32,7 @@ jobs:
             "subject": "[GitHub][${{ github.repository }}] ${{ github.event.issue.title }} (#${{ github.event.issue.number }})",
             "description": "Repository: ${{ github.repository }}<br>Issue: <a href='${{ github.event.issue.html_url }}'>#${{ github.event.issue.number }}</a><br>Opened by: ${{ github.event.issue.user.login }}<br><br>${{ github.event.issue.body }}",
             "status": 2,
-            "priority": 1,
-            "type": "${FRESHDESK_TICKET_TYPE}",
-            "group_id": ${FRESHDESK_TICKET_GROUP}
+            "priority": 1
           }
           EOF
 
