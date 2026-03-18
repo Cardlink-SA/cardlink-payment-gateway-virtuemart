@@ -18,8 +18,6 @@ jobs:
           FRESHDESK_DOMAIN: ${{ secrets.FRESHDESK_DOMAIN }}
           FRESHDESK_API_KEY: ${{ secrets.FRESHDESK_API_KEY }}
           FRESHDESK_REQUESTER_EMAIL: ${{ secrets.FRESHDESK_REQUESTER_EMAIL }}
-          FRESHDESK_TICKET_TYPE: ${{ secrets.FRESHDESK_TICKET_TYPE }}
-          FRESHDESK_TICKET_GROUP: ${{ secrets.FRESHDESK_TICKET_GROUP }}
         run: |
           curl --fail --silent --show-error \
             -u "${FRESHDESK_API_KEY}:X" \
